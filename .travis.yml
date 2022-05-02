@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t colmnpb/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true colmnpb/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t colmnpb/multi-client ./client
+  - docker build -t colmnpb/multi-nginx ./nginx
+  - docker build -t colmnpb/multi-server ./server
+  - docker build -t colmnpb/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push colmnpb/multi-client
+  - docker push colmnpb/multi-nginx
+  - docker push colmnpb/multi-server
+  - docker push colmnpb/multi-worker
+
